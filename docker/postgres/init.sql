@@ -1,0 +1,14 @@
+CREATE DATABASE auth_db;
+CREATE DATABASE user_db;
+CREATE DATABASE tariff_db;
+CREATE DATABASE order_db;
+CREATE DATABASE service_request_db;
+CREATE DATABASE statistics_db;
+
+
+GRANT ALL PRIVILEGES ON DATABASE auth_db TO tv_user;
+GRANT ALL PRIVILEGES ON DATABASE user_db TO tv_user;
+GRANT ALL PRIVILEGES ON DATABASE tariff_db TO tv_user;
+GRANT ALL PRIVILEGES ON DATABASE order_db TO tv_user;
+GRANT ALL PRIVILEGES ON DATABASE service_request_db TO tv_user;
+GRANT ALL PRIVILEGES ON DATABASE statistics_db TO tv_user;
