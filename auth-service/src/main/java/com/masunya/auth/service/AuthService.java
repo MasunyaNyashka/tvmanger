@@ -6,19 +6,27 @@ import com.masunya.auth.entity.AuthUser;
 import com.masunya.auth.repository.AuthUserRepository;
 import com.masunya.auth.security.JwtUtil;
 import com.masunya.common.enumerate.Role;
+import com.masunya.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
     private final AuthUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
     public String register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new BusinessException(
+                    "Username already exists",
+                    HttpStatus.BAD_REQUEST.value()
+            );
         }
         AuthUser user = new AuthUser();
         user.setId(UUID.randomUUID());
@@ -33,11 +41,18 @@ public class AuthService {
                 user.getRole()
         );
     }
+
     public String login(LoginRequest request) {
         AuthUser user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new BusinessException(
+                        "Invalid credentials",
+                        HttpStatus.UNAUTHORIZED.value()
+                ));
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new BusinessException(
+                    "Invalid credentials",
+                    HttpStatus.UNAUTHORIZED.value()
+            );
         }
         return jwtUtil.generateToken(
                 user.getId(),
