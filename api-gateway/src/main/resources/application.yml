@@ -22,3 +22,5 @@ management:
     web:
       exposure:
         include: health,info
+jwt:
+  secret: super-secret-key-super-secret-key-super-secret-key

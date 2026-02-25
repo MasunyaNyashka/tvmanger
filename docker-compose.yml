@@ -63,7 +63,7 @@ services:
     container_name: tv-pgadmin
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@tv.local
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
