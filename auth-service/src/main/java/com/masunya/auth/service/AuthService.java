@@ -23,10 +23,7 @@ public class AuthService {
 
     public String register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new BusinessException(
-                    "Username already exists",
-                    HttpStatus.BAD_REQUEST.value()
-            );
+            throw new BusinessException("Username already exists");
         }
         AuthUser user = new AuthUser();
         user.setId(UUID.randomUUID());
@@ -46,12 +43,12 @@ public class AuthService {
         AuthUser user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new BusinessException(
                         "Invalid credentials",
-                        HttpStatus.UNAUTHORIZED.value()
+                        HttpStatus.UNAUTHORIZED
                 ));
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new BusinessException(
                     "Invalid credentials",
-                    HttpStatus.UNAUTHORIZED.value()
+                    HttpStatus.UNAUTHORIZED
             );
         }
         return jwtUtil.generateToken(

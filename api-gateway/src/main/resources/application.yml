@@ -23,4 +23,4 @@ management:
       exposure:
         include: health,info
 jwt:
-  secret: super-secret-key-super-secret-key-super-secret-key
+  secret: ${JWT_SECRET:super-secret-key-super-secret-key-super-secret-key}
