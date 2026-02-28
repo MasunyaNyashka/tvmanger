@@ -1,0 +1,27 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: service-request-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/service_request_db
+    username: tv_user
+    password: tv_password
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: ${JWT_SECRET:super-secret-key-super-secret-key-super-secret-key}
