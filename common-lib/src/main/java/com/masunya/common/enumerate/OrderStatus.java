@@ -4,5 +4,6 @@ public enum OrderStatus {
     SUBMITTED,
     IN_PROGRESS,
     ACTIVE,
+    SUSPENDED,
     CLOSED
 }
