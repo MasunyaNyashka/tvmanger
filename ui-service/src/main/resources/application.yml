@@ -1,0 +1,12 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: ui-service
+
+services:
+  auth: http://localhost:8081
+  tariff: http://localhost:8082
+  order: http://localhost:8083
+  serviceRequest: http://localhost:8084
