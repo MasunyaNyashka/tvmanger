@@ -52,10 +52,10 @@ public class ServiceRequestController {
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ServiceRequestResponse>> getAllForAdmin(
-            @RequestParam(required = false) ServiceRequestStatus status,
-            @RequestParam(required = false) ServiceRequestType type,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
+            @RequestParam(name = "status", required = false) ServiceRequestStatus status,
+            @RequestParam(name = "type", required = false) ServiceRequestType type,
+            @RequestParam(name = "dateFrom", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(name = "dateTo", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
     ) {
         return ResponseEntity.ok(serviceRequestService.getAllForAdmin(status, type, dateFrom, dateTo));
     }

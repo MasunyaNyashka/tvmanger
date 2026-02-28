@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1.6
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+
+ARG MODULE
+
+# Cache dependencies first
+COPY pom.xml .
+COPY common-lib/pom.xml common-lib/pom.xml
+COPY discovery-service/pom.xml discovery-service/pom.xml
+COPY api-gateway/pom.xml api-gateway/pom.xml
+COPY auth-service/pom.xml auth-service/pom.xml
+COPY tariff-service/pom.xml tariff-service/pom.xml
+COPY order-service/pom.xml order-service/pom.xml
+COPY service-request-service/pom.xml service-request-service/pom.xml
+COPY ui-service/pom.xml ui-service/pom.xml
+
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -pl ${MODULE} -am -DskipTests dependency:go-offline
+
+# Copy sources after deps are cached
+COPY . .
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -pl ${MODULE} -am clean package -DskipTests
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+ARG MODULE
+COPY --from=build /app/${MODULE}/target/${MODULE}-*.jar /app/app.jar
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/app/app.jar"]

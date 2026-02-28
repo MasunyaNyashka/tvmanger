@@ -10,3 +10,6 @@ services:
   tariff: http://localhost:8082
   order: http://localhost:8083
   serviceRequest: http://localhost:8084
+
+vaadin:
+  productionMode: true

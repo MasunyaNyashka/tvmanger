@@ -1,4 +1,4 @@
-﻿package com.masunya.ui.dto;
+package com.masunya.ui.dto;
 
 import com.masunya.common.enumerate.OrderStatus;
 import lombok.Getter;

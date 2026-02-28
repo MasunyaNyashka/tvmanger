@@ -19,11 +19,14 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: tv-zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - tv-network
@@ -37,7 +40,7 @@ services:
       - "8085:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: tv-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: tv-kafka:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: tv-zookeeper:2181
     networks:
       - tv-network
@@ -55,6 +58,142 @@ services:
     volumes:
       - tv-postgres-data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - tv-network
+
+  discovery-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        MODULE: discovery-service
+    container_name: tv-discovery
+    ports:
+      - "8761:8761"
+    networks:
+      - tv-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        MODULE: api-gateway
+    container_name: tv-api-gateway
+    depends_on:
+      - discovery-service
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      JWT_SECRET: super-secret-key-super-secret-key-super-secret-key
+    networks:
+      - tv-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        MODULE: auth-service
+    container_name: tv-auth-service
+    depends_on:
+      - postgres
+      - discovery-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: tv_user
+      SPRING_DATASOURCE_PASSWORD: tv_password
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      JWT_SECRET: super-secret-key-super-secret-key-super-secret-key
+    networks:
+      - tv-network
+
+  tariff-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        MODULE: tariff-service
+    container_name: tv-tariff-service
+    depends_on:
+      - postgres
+      - discovery-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tariff_db
+      SPRING_DATASOURCE_USERNAME: tv_user
+      SPRING_DATASOURCE_PASSWORD: tv_password
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      JWT_SECRET: super-secret-key-super-secret-key-super-secret-key
+    networks:
+      - tv-network
+
+  order-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        MODULE: order-service
+    container_name: tv-order-service
+    depends_on:
+      - postgres
+      - discovery-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/order_db
+      SPRING_DATASOURCE_USERNAME: tv_user
+      SPRING_DATASOURCE_PASSWORD: tv_password
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      JWT_SECRET: super-secret-key-super-secret-key-super-secret-key
+    networks:
+      - tv-network
+
+  service-request-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        MODULE: service-request-service
+    container_name: tv-service-request-service
+    depends_on:
+      - postgres
+      - discovery-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/service_request_db
+      SPRING_DATASOURCE_USERNAME: tv_user
+      SPRING_DATASOURCE_PASSWORD: tv_password
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      JWT_SECRET: super-secret-key-super-secret-key-super-secret-key
+    networks:
+      - tv-network
+
+  ui-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        MODULE: ui-service
+    container_name: tv-ui-service
+    depends_on:
+      - auth-service
+      - tariff-service
+      - order-service
+      - service-request-service
+    ports:
+      - "8090:8090"
+    environment:
+      SERVICES_AUTH: http://auth-service:8081
+      SERVICES_TARIFF: http://tariff-service:8082
+      SERVICES_ORDER: http://order-service:8083
+      SERVICES_SERVICEREQUEST: http://service-request-service:8084
+      VAADIN_PRODUCTION_MODE: "true"
     networks:
       - tv-network
 
