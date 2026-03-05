@@ -1,6 +1,8 @@
 package com.masunya.tariff.service;
 
 import com.masunya.common.exception.BusinessException;
+import com.masunya.tariff.audit.AdminAuditLog;
+import com.masunya.tariff.audit.AdminAuditLogRepository;
 import com.masunya.tariff.dto.TariffCreateRequest;
 import com.masunya.tariff.dto.TariffResponse;
 import com.masunya.tariff.dto.TariffUpdateRequest;
@@ -19,6 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TariffService {
     private final TariffRepository tariffRepository;
+    private final AdminAuditLogRepository adminAuditLogRepository;
 
     @Transactional(readOnly = true)
     public List<TariffResponse> getPublicList() {
@@ -44,7 +47,7 @@ public class TariffService {
     }
 
     @Transactional
-    public TariffResponse create(TariffCreateRequest request) {
+    public TariffResponse create(UUID adminUserId, TariffCreateRequest request) {
         if (tariffRepository.existsByNameIgnoreCase(request.getName())) {
             throw new BusinessException("Tariff name already exists", HttpStatus.CONFLICT);
         }
@@ -57,11 +60,13 @@ public class TariffService {
         tariff.setChannels(request.getChannels());
         tariff.setArchived(false);
         tariff.setCreatedAt(Instant.now());
-        return toResponse(tariffRepository.save(tariff));
+        Tariff saved = tariffRepository.save(tariff);
+        saveAdminAudit(adminUserId, "TARIFF_CREATED", "TARIFF", saved.getId(), saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
-    public TariffResponse update(UUID id, TariffUpdateRequest request) {
+    public TariffResponse update(UUID adminUserId, UUID id, TariffUpdateRequest request) {
         Tariff tariff = tariffRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Tariff not found", HttpStatus.NOT_FOUND));
         if (tariffRepository.existsByNameIgnoreCaseAndIdNot(request.getName(), id)) {
@@ -72,22 +77,45 @@ public class TariffService {
         tariff.setConnectionType(request.getConnectionType());
         tariff.setDescription(request.getDescription());
         tariff.setChannels(request.getChannels());
-        return toResponse(tariffRepository.save(tariff));
+        Tariff saved = tariffRepository.save(tariff);
+        saveAdminAudit(adminUserId, "TARIFF_UPDATED", "TARIFF", saved.getId(), saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
-    public TariffResponse setArchived(UUID id, boolean archived) {
+    public TariffResponse setArchived(UUID adminUserId, UUID id, boolean archived) {
         Tariff tariff = tariffRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Tariff not found", HttpStatus.NOT_FOUND));
         tariff.setArchived(archived);
-        return toResponse(tariffRepository.save(tariff));
+        Tariff saved = tariffRepository.save(tariff);
+        saveAdminAudit(
+                adminUserId,
+                archived ? "TARIFF_ARCHIVED" : "TARIFF_UNARCHIVED",
+                "TARIFF",
+                saved.getId(),
+                saved.getName()
+        );
+        return toResponse(saved);
     }
 
     @Transactional
-    public void delete(UUID id) {
+    public void delete(UUID adminUserId, UUID id) {
         Tariff tariff = tariffRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Tariff not found", HttpStatus.NOT_FOUND));
         tariffRepository.delete(tariff);
+        saveAdminAudit(adminUserId, "TARIFF_DELETED", "TARIFF", id, tariff.getName());
+    }
+
+    private void saveAdminAudit(UUID adminUserId, String action, String entityType, UUID entityId, String details) {
+        AdminAuditLog log = new AdminAuditLog();
+        log.setId(UUID.randomUUID());
+        log.setCreatedAt(Instant.now());
+        log.setAdminUserId(adminUserId);
+        log.setAction(action);
+        log.setEntityType(entityType);
+        log.setEntityId(entityId);
+        log.setDetails(details);
+        adminAuditLogRepository.save(log);
     }
 
     private TariffResponse toResponse(Tariff tariff) {

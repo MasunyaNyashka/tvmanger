@@ -3,6 +3,8 @@ package com.masunya.servicerequest.service;
 import com.masunya.common.enumerate.ServiceRequestStatus;
 import com.masunya.common.enumerate.ServiceRequestType;
 import com.masunya.common.exception.BusinessException;
+import com.masunya.servicerequest.audit.AdminAuditLog;
+import com.masunya.servicerequest.audit.AdminAuditLogRepository;
 import com.masunya.servicerequest.dto.ServiceRequestCreateRequest;
 import com.masunya.servicerequest.dto.ServiceRequestResponse;
 import com.masunya.servicerequest.dto.ServiceRequestStatusUpdateRequest;
@@ -23,6 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ServiceRequestService {
     private final ServiceRequestRepository requestRepository;
+    private final AdminAuditLogRepository adminAuditLogRepository;
 
     @Transactional
     public ServiceRequestResponse create(UUID userId, ServiceRequestCreateRequest request) {
@@ -103,16 +106,37 @@ public class ServiceRequestService {
     }
 
     @Transactional
-    public ServiceRequestResponse updateStatus(UUID id, ServiceRequestStatusUpdateRequest request) {
+    public ServiceRequestResponse updateStatus(UUID adminUserId, UUID id, ServiceRequestStatusUpdateRequest request) {
         ServiceRequest sr = requestRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Service request not found", HttpStatus.NOT_FOUND));
+        ServiceRequestStatus oldStatus = sr.getStatus();
         if (!isTransitionAllowed(sr.getStatus(), request.getStatus())) {
             throw new BusinessException("Invalid status transition", HttpStatus.CONFLICT);
         }
         sr.setStatus(request.getStatus());
         sr.setAdminComment(request.getAdminComment());
         sr.setUpdatedAt(Instant.now());
-        return toResponse(requestRepository.save(sr));
+        ServiceRequest saved = requestRepository.save(sr);
+        saveAdminAudit(
+                adminUserId,
+                "SERVICE_REQUEST_STATUS_CHANGED",
+                "SERVICE_REQUEST",
+                saved.getId(),
+                oldStatus + " -> " + saved.getStatus()
+        );
+        return toResponse(saved);
+    }
+
+    private void saveAdminAudit(UUID adminUserId, String action, String entityType, UUID entityId, String details) {
+        AdminAuditLog log = new AdminAuditLog();
+        log.setId(UUID.randomUUID());
+        log.setCreatedAt(Instant.now());
+        log.setAdminUserId(adminUserId);
+        log.setAction(action);
+        log.setEntityType(entityType);
+        log.setEntityId(entityId);
+        log.setDetails(details);
+        adminAuditLogRepository.save(log);
     }
 
     private boolean isTransitionAllowed(ServiceRequestStatus current, ServiceRequestStatus next) {

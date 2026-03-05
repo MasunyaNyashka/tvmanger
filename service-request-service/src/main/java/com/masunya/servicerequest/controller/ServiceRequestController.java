@@ -63,10 +63,11 @@ public class ServiceRequestController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceRequestResponse> updateStatus(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID id,
             @Valid @RequestBody ServiceRequestStatusUpdateRequest request
     ) {
-        return ResponseEntity.ok(serviceRequestService.updateStatus(id, request));
+        return ResponseEntity.ok(serviceRequestService.updateStatus(extractUserId(jwt), id, request));
     }
 
     private UUID extractUserId(Jwt jwt) {

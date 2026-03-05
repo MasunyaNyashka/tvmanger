@@ -61,10 +61,11 @@ public class ConnectionOrderController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ConnectionOrderResponse> updateStatus(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID id,
             @Valid @RequestBody ConnectionOrderStatusUpdateRequest request
     ) {
-        return ResponseEntity.ok(orderService.updateStatus(id, request));
+        return ResponseEntity.ok(orderService.updateStatus(extractUserId(jwt), id, request));
     }
 
     private UUID extractUserId(Jwt jwt) {

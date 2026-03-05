@@ -1,13 +1,17 @@
 package com.masunya.tariff.controller;
 
+import com.masunya.common.exception.BusinessException;
 import com.masunya.tariff.dto.TariffCreateRequest;
 import com.masunya.tariff.dto.TariffResponse;
 import com.masunya.tariff.dto.TariffUpdateRequest;
 import com.masunya.tariff.service.TariffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,35 +41,56 @@ public class TariffController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TariffResponse> create(@Valid @RequestBody TariffCreateRequest request) {
-        return ResponseEntity.ok(tariffService.create(request));
+    public ResponseEntity<TariffResponse> create(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody TariffCreateRequest request
+    ) {
+        return ResponseEntity.ok(tariffService.create(extractUserId(jwt), request));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TariffResponse> update(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID id,
             @Valid @RequestBody TariffUpdateRequest request
     ) {
-        return ResponseEntity.ok(tariffService.update(id, request));
+        return ResponseEntity.ok(tariffService.update(extractUserId(jwt), id, request));
     }
 
     @PatchMapping("/{id}/archive")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TariffResponse> archive(@PathVariable UUID id) {
-        return ResponseEntity.ok(tariffService.setArchived(id, true));
+    public ResponseEntity<TariffResponse> archive(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID id
+    ) {
+        return ResponseEntity.ok(tariffService.setArchived(extractUserId(jwt), id, true));
     }
 
     @PatchMapping("/{id}/unarchive")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TariffResponse> unarchive(@PathVariable UUID id) {
-        return ResponseEntity.ok(tariffService.setArchived(id, false));
+    public ResponseEntity<TariffResponse> unarchive(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID id
+    ) {
+        return ResponseEntity.ok(tariffService.setArchived(extractUserId(jwt), id, false));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        tariffService.delete(id);
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID id
+    ) {
+        tariffService.delete(extractUserId(jwt), id);
         return ResponseEntity.noContent().build();
+    }
+
+    private UUID extractUserId(Jwt jwt) {
+        try {
+            return UUID.fromString(jwt.getSubject());
+        } catch (Exception e) {
+            throw new BusinessException("Invalid user id in token", HttpStatus.UNAUTHORIZED);
+        }
     }
 }

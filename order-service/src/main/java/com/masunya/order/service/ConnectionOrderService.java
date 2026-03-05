@@ -2,6 +2,8 @@ package com.masunya.order.service;
 
 import com.masunya.common.enumerate.OrderStatus;
 import com.masunya.common.exception.BusinessException;
+import com.masunya.order.audit.AdminAuditLog;
+import com.masunya.order.audit.AdminAuditLogRepository;
 import com.masunya.order.dto.ConnectionOrderCreateRequest;
 import com.masunya.order.dto.ConnectionOrderResponse;
 import com.masunya.order.dto.ConnectionOrderStatusUpdateRequest;
@@ -22,6 +24,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ConnectionOrderService {
     private final ConnectionOrderRepository orderRepository;
+    private final AdminAuditLogRepository adminAuditLogRepository;
 
     @Transactional
     public ConnectionOrderResponse create(UUID userId, ConnectionOrderCreateRequest request) {
@@ -86,16 +89,37 @@ public class ConnectionOrderService {
     }
 
     @Transactional
-    public ConnectionOrderResponse updateStatus(UUID orderId, ConnectionOrderStatusUpdateRequest request) {
+    public ConnectionOrderResponse updateStatus(UUID adminUserId, UUID orderId, ConnectionOrderStatusUpdateRequest request) {
         ConnectionOrder order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException("Order not found", HttpStatus.NOT_FOUND));
+        OrderStatus oldStatus = order.getStatus();
         if (!isTransitionAllowed(order.getStatus(), request.getStatus())) {
             throw new BusinessException("Invalid status transition", HttpStatus.CONFLICT);
         }
         order.setStatus(request.getStatus());
         order.setAdminComment(request.getAdminComment());
         order.setUpdatedAt(Instant.now());
-        return toResponse(orderRepository.save(order));
+        ConnectionOrder saved = orderRepository.save(order);
+        saveAdminAudit(
+                adminUserId,
+                "ORDER_STATUS_CHANGED",
+                "ORDER",
+                saved.getId(),
+                oldStatus + " -> " + saved.getStatus()
+        );
+        return toResponse(saved);
+    }
+
+    private void saveAdminAudit(UUID adminUserId, String action, String entityType, UUID entityId, String details) {
+        AdminAuditLog log = new AdminAuditLog();
+        log.setId(UUID.randomUUID());
+        log.setCreatedAt(Instant.now());
+        log.setAdminUserId(adminUserId);
+        log.setAction(action);
+        log.setEntityType(entityType);
+        log.setEntityId(entityId);
+        log.setDetails(details);
+        adminAuditLogRepository.save(log);
     }
 
     private boolean isTransitionAllowed(OrderStatus current, OrderStatus next) {
