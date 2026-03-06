@@ -2,6 +2,7 @@ package com.masunya.ui.client;
 
 import com.masunya.common.enumerate.ServiceRequestStatus;
 import com.masunya.common.enumerate.ServiceRequestType;
+import com.masunya.ui.dto.AdminAuditLogResponse;
 import com.masunya.ui.dto.ServiceRequestCreateRequest;
 import com.masunya.ui.dto.ServiceRequestResponse;
 import com.masunya.ui.dto.ServiceRequestStatusUpdateRequest;
@@ -110,6 +111,18 @@ public class ServiceRequestClient {
                 HttpMethod.PATCH,
                 entity,
                 ServiceRequestResponse.class
+        );
+        return response.getBody();
+    }
+
+    public List<AdminAuditLogResponse> getAdminAuditLogs(String token, int limit) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        ResponseEntity<List<AdminAuditLogResponse>> response = restTemplate.exchange(
+                baseUrl + "/admin/audit-logs?limit=" + limit,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<>() {}
         );
         return response.getBody();
     }

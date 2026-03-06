@@ -1,6 +1,7 @@
 package com.masunya.ui.client;
 
 import com.masunya.common.enumerate.OrderStatus;
+import com.masunya.ui.dto.AdminAuditLogResponse;
 import com.masunya.ui.dto.ConnectionOrderCreateRequest;
 import com.masunya.ui.dto.ConnectionOrderResponse;
 import com.masunya.ui.dto.ConnectionOrderStatusUpdateRequest;
@@ -104,6 +105,18 @@ public class OrderClient {
                 HttpMethod.PATCH,
                 entity,
                 ConnectionOrderResponse.class
+        );
+        return response.getBody();
+    }
+
+    public List<AdminAuditLogResponse> getAdminAuditLogs(String token, int limit) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        ResponseEntity<List<AdminAuditLogResponse>> response = restTemplate.exchange(
+                baseUrl + "/admin/audit-logs?limit=" + limit,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<>() {}
         );
         return response.getBody();
     }
