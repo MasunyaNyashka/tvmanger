@@ -7,6 +7,7 @@ import com.masunya.ui.client.ServiceRequestClient;
 import com.masunya.ui.dto.ServiceRequestResponse;
 import com.masunya.ui.dto.ServiceRequestStatusUpdateRequest;
 import com.masunya.ui.security.SessionState;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -52,7 +53,10 @@ public class AdminServiceRequestsView extends VerticalLayout implements BeforeEn
         grid.addColumn(ServiceRequestResponse::getAdminComment).setHeader("Комментарий").setAutoWidth(true);
         grid.addColumn(ServiceRequestResponse::getCreatedAt).setHeader("Создано").setAutoWidth(true);
         grid.addComponentColumn(req -> new Button("Сменить статус", e -> openStatusDialog(req.getId())))
-                .setHeader("Действия");
+                .setHeader("Статус");
+        grid.addComponentColumn(req -> new Button("Тарифы клиента", e ->
+                UI.getCurrent().navigate("admin/client-tariffs?userId=" + req.getUserId())
+        )).setHeader("Условия тарифа");
 
         add(title, filters, grid);
         setSizeFull();

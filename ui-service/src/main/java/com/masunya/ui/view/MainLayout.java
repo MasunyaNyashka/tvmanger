@@ -72,12 +72,14 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
             items.add(createTab("Мои заявки", MyOrdersView.class));
             items.add(createTab("Заявка на сервис", CreateServiceRequestView.class));
             items.add(createTab("Мои сервисные заявки", MyServiceRequestsView.class));
+            items.add(createTab("Мои тарифы", MyTariffsView.class));
             items.add(logoutTab());
         } else if (SessionState.hasRole(Role.ADMIN)) {
             items.add(createTab("Дашборд (админ)", AdminDashboardView.class));
             items.add(createTab("Логи (админ)", AdminAuditLogsView.class));
             items.add(createTab("Заявки (админ)", AdminOrdersView.class));
             items.add(createTab("Сервисные заявки (админ)", AdminServiceRequestsView.class));
+            items.add(createTab("Тарифы клиентов (админ)", AdminClientTariffsView.class));
             items.add(createTab("Тарифы (админ)", AdminTariffsView.class));
             items.add(logoutTab());
         }

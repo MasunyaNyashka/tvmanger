@@ -2,6 +2,7 @@ package com.masunya.ui.view;
 
 import com.masunya.ui.client.TariffClient;
 import com.masunya.ui.dto.TariffResponse;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
@@ -30,7 +31,10 @@ public class TariffListView extends VerticalLayout {
         grid.addColumn(t -> t.getConnectionType() != null ? t.getConnectionType().name() : "")
                 .setHeader("Тип подключения").setAutoWidth(true);
         grid.addColumn(t -> t.getChannels() != null ? t.getChannels().size() : 0)
-                .setHeader("Каналов").setAutoWidth(true);
+                .setHeader("Каналы").setAutoWidth(true);
+        grid.addComponentColumn(t -> new Button("Подключить", e ->
+                UI.getCurrent().navigate("orders/create?tariffId=" + t.getId())
+        )).setHeader("Действие");
 
         add(title, refresh, grid);
         setSizeFull();

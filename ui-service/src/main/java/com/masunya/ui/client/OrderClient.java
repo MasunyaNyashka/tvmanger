@@ -2,6 +2,9 @@ package com.masunya.ui.client;
 
 import com.masunya.common.enumerate.OrderStatus;
 import com.masunya.ui.dto.AdminAuditLogResponse;
+import com.masunya.ui.dto.ClientTariffAssignRequest;
+import com.masunya.ui.dto.ClientTariffResponse;
+import com.masunya.ui.dto.ClientTariffUpdateRequest;
 import com.masunya.ui.dto.ConnectionOrderCreateRequest;
 import com.masunya.ui.dto.ConnectionOrderResponse;
 import com.masunya.ui.dto.ConnectionOrderStatusUpdateRequest;
@@ -117,6 +120,63 @@ public class OrderClient {
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 new ParameterizedTypeReference<>() {}
+        );
+        return response.getBody();
+    }
+
+    public ClientTariffResponse assignClientTariff(String token, ClientTariffAssignRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<ClientTariffAssignRequest> entity = new HttpEntity<>(request, headers);
+        ResponseEntity<ClientTariffResponse> response = restTemplate.exchange(
+                baseUrl + "/client-tariffs/admin",
+                HttpMethod.POST,
+                entity,
+                ClientTariffResponse.class
+        );
+        return response.getBody();
+    }
+
+    public List<ClientTariffResponse> getMyClientTariffs(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        ResponseEntity<List<ClientTariffResponse>> response = restTemplate.exchange(
+                baseUrl + "/client-tariffs/my",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<>() {}
+        );
+        return response.getBody();
+    }
+
+    public List<ClientTariffResponse> getClientTariffsForAdmin(String token, UUID userId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        String url = userId == null
+                ? baseUrl + "/client-tariffs/admin"
+                : baseUrl + "/client-tariffs/admin?userId=" + userId;
+        ResponseEntity<List<ClientTariffResponse>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<>() {}
+        );
+        return response.getBody();
+    }
+
+    public ClientTariffResponse updateClientTariff(
+            String token,
+            UUID clientTariffId,
+            ClientTariffUpdateRequest request
+    ) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<ClientTariffUpdateRequest> entity = new HttpEntity<>(request, headers);
+        ResponseEntity<ClientTariffResponse> response = restTemplate.exchange(
+                baseUrl + "/client-tariffs/admin/" + clientTariffId + "/tariff",
+                HttpMethod.PATCH,
+                entity,
+                ClientTariffResponse.class
         );
         return response.getBody();
     }

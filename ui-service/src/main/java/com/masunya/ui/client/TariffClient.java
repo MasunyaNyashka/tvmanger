@@ -1,6 +1,7 @@
 package com.masunya.ui.client;
 
 import com.masunya.ui.dto.AdminAuditLogResponse;
+import com.masunya.ui.dto.TariffCreateRequest;
 import com.masunya.ui.dto.TariffResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -53,6 +54,19 @@ public class TariffClient {
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 new ParameterizedTypeReference<>() {}
+        );
+        return response.getBody();
+    }
+
+    public TariffResponse create(String token, TariffCreateRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<TariffCreateRequest> entity = new HttpEntity<>(request, headers);
+        ResponseEntity<TariffResponse> response = restTemplate.exchange(
+                baseUrl + "/tariffs",
+                HttpMethod.POST,
+                entity,
+                TariffResponse.class
         );
         return response.getBody();
     }

@@ -25,6 +25,7 @@ import java.util.UUID;
 public class ConnectionOrderService {
     private final ConnectionOrderRepository orderRepository;
     private final AdminAuditLogRepository adminAuditLogRepository;
+    private final ClientTariffService clientTariffService;
 
     @Transactional
     public ConnectionOrderResponse create(UUID userId, ConnectionOrderCreateRequest request) {
@@ -100,6 +101,9 @@ public class ConnectionOrderService {
         order.setAdminComment(request.getAdminComment());
         order.setUpdatedAt(Instant.now());
         ConnectionOrder saved = orderRepository.save(order);
+        if (oldStatus != OrderStatus.ACTIVE && saved.getStatus() == OrderStatus.ACTIVE) {
+            clientTariffService.createFromActivatedOrder(saved.getUserId(), saved.getTariffId());
+        }
         saveAdminAudit(
                 adminUserId,
                 "ORDER_STATUS_CHANGED",
