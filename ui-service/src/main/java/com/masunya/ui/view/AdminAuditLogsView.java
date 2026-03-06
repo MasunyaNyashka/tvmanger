@@ -1,6 +1,7 @@
 package com.masunya.ui.view;
 
 import com.masunya.common.enumerate.Role;
+import com.masunya.ui.client.AuthClient;
 import com.masunya.ui.client.OrderClient;
 import com.masunya.ui.client.ServiceRequestClient;
 import com.masunya.ui.client.TariffClient;
@@ -27,6 +28,7 @@ import java.util.UUID;
 @Route(value = "admin/logs", layout = MainLayout.class)
 @PageTitle("Логи админа")
 public class AdminAuditLogsView extends VerticalLayout implements BeforeEnterObserver {
+    private final AuthClient authClient;
     private final OrderClient orderClient;
     private final ServiceRequestClient serviceRequestClient;
     private final TariffClient tariffClient;
@@ -35,10 +37,12 @@ public class AdminAuditLogsView extends VerticalLayout implements BeforeEnterObs
     private final IntegerField limitField = new IntegerField("Лимит из каждого сервиса");
 
     public AdminAuditLogsView(
+            AuthClient authClient,
             OrderClient orderClient,
             ServiceRequestClient serviceRequestClient,
             TariffClient tariffClient
     ) {
+        this.authClient = authClient;
         this.orderClient = orderClient;
         this.serviceRequestClient = serviceRequestClient;
         this.tariffClient = tariffClient;
@@ -73,6 +77,7 @@ public class AdminAuditLogsView extends VerticalLayout implements BeforeEnterObs
             int normalizedLimit = Math.max(1, Math.min(limit, 500));
 
             List<AuditRow> rows = new ArrayList<>();
+            rows.addAll(toRows("auth-service", authClient.getAdminAuditLogs(token, normalizedLimit)));
             rows.addAll(toRows("order-service", orderClient.getAdminAuditLogs(token, normalizedLimit)));
             rows.addAll(toRows("service-request-service", serviceRequestClient.getAdminAuditLogs(token, normalizedLimit)));
             rows.addAll(toRows("tariff-service", tariffClient.getAdminAuditLogs(token, normalizedLimit)));
