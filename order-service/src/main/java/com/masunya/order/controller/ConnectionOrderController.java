@@ -43,7 +43,7 @@ public class ConnectionOrderController {
     @GetMapping("/my/{id}")
     public ResponseEntity<ConnectionOrderResponse> getMyOrder(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID id
+            @PathVariable("id") UUID id
     ) {
         return ResponseEntity.ok(orderService.getMyOrder(extractUserId(jwt), id));
     }
@@ -62,7 +62,7 @@ public class ConnectionOrderController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ConnectionOrderResponse> updateStatus(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID id,
+            @PathVariable("id") UUID id,
             @Valid @RequestBody ConnectionOrderStatusUpdateRequest request
     ) {
         return ResponseEntity.ok(orderService.updateStatus(extractUserId(jwt), id, request));

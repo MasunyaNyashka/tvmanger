@@ -57,7 +57,7 @@ public class ClientTariffController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClientTariffResponse> updateTariff(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID id,
+            @PathVariable("id") UUID id,
             @Valid @RequestBody ClientTariffUpdateRequest request
     ) {
         return ResponseEntity.ok(clientTariffService.updateTariff(extractUserId(jwt), id, request));

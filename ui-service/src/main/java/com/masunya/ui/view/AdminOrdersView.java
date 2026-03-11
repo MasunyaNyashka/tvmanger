@@ -20,9 +20,9 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
-import java.util.UUID;
 
 @Route(value = "admin/orders", layout = MainLayout.class)
 @PageTitle("Заявки (админ)")
@@ -48,7 +48,7 @@ public class AdminOrdersView extends VerticalLayout implements BeforeEnterObserv
         grid.addColumn(ConnectionOrderResponse::getStatus).setHeader("Статус").setAutoWidth(true);
         grid.addColumn(ConnectionOrderResponse::getAdminComment).setHeader("Комментарий").setAutoWidth(true);
         grid.addColumn(ConnectionOrderResponse::getCreatedAt).setHeader("Создано").setAutoWidth(true);
-        grid.addComponentColumn(order -> new Button("Сменить статус", e -> openStatusDialog(order.getId())))
+        grid.addComponentColumn(order -> new Button("Сменить статус", e -> openStatusDialog(order)))
                 .setHeader("Действия");
 
         add(title, filters, grid);
@@ -56,24 +56,36 @@ public class AdminOrdersView extends VerticalLayout implements BeforeEnterObserv
         load();
     }
 
-    private void openStatusDialog(UUID orderId) {
+    private void openStatusDialog(ConnectionOrderResponse order) {
         Dialog dialog = new Dialog();
         ComboBox<OrderStatus> status = new ComboBox<>("Новый статус");
         status.setItems(OrderStatus.values());
+        status.setValue(order.getStatus());
         TextArea comment = new TextArea("Комментарий");
+        comment.setValue(order.getAdminComment() == null ? "" : order.getAdminComment());
+
         Button save = new Button("Сохранить", e -> {
             try {
+                if (status.getValue() == null) {
+                    Notification.show("Выберите статус");
+                    return;
+                }
+
                 String token = SessionState.getToken().orElseThrow();
                 ConnectionOrderStatusUpdateRequest request = new ConnectionOrderStatusUpdateRequest();
                 request.setStatus(status.getValue());
                 request.setAdminComment(comment.getValue());
-                orderClient.updateStatus(token, orderId, request);
+
+                orderClient.updateStatus(token, order.getId(), request);
                 dialog.close();
                 load();
+            } catch (RestClientResponseException ex) {
+                Notification.show("Ошибка обновления: " + ex.getStatusCode().value());
             } catch (Exception ex) {
                 Notification.show("Ошибка обновления");
             }
         });
+
         dialog.add(new VerticalLayout(status, comment, save));
         dialog.open();
     }
