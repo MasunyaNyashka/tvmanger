@@ -8,11 +8,13 @@ import com.masunya.ui.dto.ClientTariffUpdateRequest;
 import com.masunya.ui.dto.TariffResponse;
 import com.masunya.ui.security.SessionState;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.BigDecimalField;
@@ -42,7 +44,10 @@ public class AdminClientTariffsView extends VerticalLayout implements BeforeEnte
 
         H2 title = new H2("Персональные тарифы клиентов");
         Button loadButton = new Button("Загрузить", e -> loadItems());
+        loadButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
         HorizontalLayout controls = new HorizontalLayout(userIdFilter, loadButton);
+        controls.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
 
         grid.addColumn(ClientTariffResponse::getId).setHeader("ID записи").setAutoWidth(true);
         grid.addColumn(ClientTariffResponse::getUserId).setHeader("User ID").setAutoWidth(true);
@@ -50,10 +55,20 @@ public class AdminClientTariffsView extends VerticalLayout implements BeforeEnte
         grid.addColumn(ClientTariffResponse::getCustomPrice).setHeader("Персональная цена").setAutoWidth(true);
         grid.addColumn(ClientTariffResponse::getCustomConditions).setHeader("Условия").setAutoWidth(true);
         grid.addColumn(ClientTariffResponse::getUpdatedAt).setHeader("Обновлено").setAutoWidth(true);
-        grid.addComponentColumn(item -> new Button("Изменить", e -> openEditDialog(item))).setHeader("Действия");
+        Grid.Column<ClientTariffResponse> actionsColumn = grid.addComponentColumn(item -> {
+            Button editButton = new Button("Изменить тариф", e -> openEditDialog(item));
+            editButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+            return editButton;
+        }).setHeader("Действия");
+        actionsColumn.setAutoWidth(true);
+        actionsColumn.setFlexGrow(0);
+        actionsColumn.setWidth("190px");
 
         add(title, controls, grid);
         setSizeFull();
+        setFlexGrow(1, grid);
+        grid.setSizeFull();
+
         loadTariffs();
         loadItems();
     }
@@ -110,6 +125,8 @@ public class AdminClientTariffsView extends VerticalLayout implements BeforeEnte
                 Notification.show("Не удалось сохранить изменения");
             }
         });
+        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
         dialog.add(new VerticalLayout(tariff, price, conditions, save));
         dialog.open();
     }

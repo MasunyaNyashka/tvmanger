@@ -7,12 +7,14 @@ import com.masunya.ui.dto.ConnectionOrderResponse;
 import com.masunya.ui.dto.ConnectionOrderStatusUpdateRequest;
 import com.masunya.ui.security.SessionState;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -40,7 +42,9 @@ public class AdminOrdersView extends VerticalLayout implements BeforeEnterObserv
         statusFilter.setItems(OrderStatus.values());
 
         Button refresh = new Button("Обновить", e -> load());
+        refresh.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         HorizontalLayout filters = new HorizontalLayout(statusFilter, dateFrom, dateTo, refresh);
+        filters.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
 
         grid.addColumn(ConnectionOrderResponse::getId).setHeader("ID").setAutoWidth(true);
         grid.addColumn(ConnectionOrderResponse::getUserId).setHeader("User ID").setAutoWidth(true);
@@ -48,11 +52,19 @@ public class AdminOrdersView extends VerticalLayout implements BeforeEnterObserv
         grid.addColumn(ConnectionOrderResponse::getStatus).setHeader("Статус").setAutoWidth(true);
         grid.addColumn(ConnectionOrderResponse::getAdminComment).setHeader("Комментарий").setAutoWidth(true);
         grid.addColumn(ConnectionOrderResponse::getCreatedAt).setHeader("Создано").setAutoWidth(true);
-        grid.addComponentColumn(order -> new Button("Сменить статус", e -> openStatusDialog(order)))
-                .setHeader("Действия");
+        Grid.Column<ConnectionOrderResponse> actionsColumn = grid.addComponentColumn(order -> {
+            Button changeStatus = new Button("Сменить статус", e -> openStatusDialog(order));
+            changeStatus.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+            return changeStatus;
+        }).setHeader("Действия");
+        actionsColumn.setAutoWidth(true);
+        actionsColumn.setFlexGrow(0);
+        actionsColumn.setWidth("180px");
 
         add(title, filters, grid);
         setSizeFull();
+        setFlexGrow(1, grid);
+        grid.setSizeFull();
         load();
     }
 
@@ -85,6 +97,7 @@ public class AdminOrdersView extends VerticalLayout implements BeforeEnterObserv
                 Notification.show("Ошибка обновления");
             }
         });
+        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         dialog.add(new VerticalLayout(status, comment, save));
         dialog.open();
