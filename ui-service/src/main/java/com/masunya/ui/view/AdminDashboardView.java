@@ -9,11 +9,13 @@ import com.masunya.ui.dto.ServiceRequestResponse;
 import com.masunya.ui.dto.TariffResponse;
 import com.masunya.ui.security.SessionState;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -21,6 +23,7 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
@@ -53,22 +56,29 @@ public class AdminDashboardView extends VerticalLayout implements BeforeEnterObs
         this.tariffClient = tariffClient;
 
         H2 title = new H2("Дашборд администратора");
-        dateFrom.setValue(java.time.LocalDate.now());
-        dateTo.setValue(java.time.LocalDate.now());
+        dateFrom.setValue(LocalDate.now());
+        dateTo.setValue(LocalDate.now());
+
         Button refresh = new Button("Обновить", e -> load());
+        refresh.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         HorizontalLayout filters = new HorizontalLayout(dateFrom, dateTo, refresh);
+        filters.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
+        filters.setWidthFull();
 
         topTariffsGrid.addColumn(TariffStatRow::getTariffName).setHeader("Тариф").setAutoWidth(true);
         topTariffsGrid.addColumn(TariffStatRow::getCount).setHeader("Заявок").setAutoWidth(true);
-        topTariffsGrid.setHeight("220px");
+        topTariffsGrid.setWidthFull();
+        topTariffsGrid.setAllRowsVisible(true);
 
         ordersByHourGrid.addColumn(HourStatRow::getHour).setHeader("Час").setAutoWidth(true);
         ordersByHourGrid.addColumn(HourStatRow::getCount).setHeader("Заявок").setAutoWidth(true);
-        ordersByHourGrid.setHeight("420px");
+        ordersByHourGrid.setWidthFull();
+        ordersByHourGrid.setAllRowsVisible(true);
 
         serviceRequestsByHourGrid.addColumn(HourStatRow::getHour).setHeader("Час").setAutoWidth(true);
         serviceRequestsByHourGrid.addColumn(HourStatRow::getCount).setHeader("Сервисных заявок").setAutoWidth(true);
-        serviceRequestsByHourGrid.setHeight("420px");
+        serviceRequestsByHourGrid.setWidthFull();
+        serviceRequestsByHourGrid.setAllRowsVisible(true);
 
         add(
                 title,
