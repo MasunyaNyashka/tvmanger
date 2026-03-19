@@ -34,6 +34,7 @@ public class SecurityConfig {
     ) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                // Публичные endpoints оставляем доступными без токена.
                 .authorizeExchange(ex -> ex
                         .pathMatchers("/auth/**", "/actuator/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/tariffs/**").permitAll()
@@ -50,6 +51,7 @@ public class SecurityConfig {
 
     @Bean
     public ReactiveJwtDecoder jwtDecoder(@Value("${jwt.secret}") String secret) {
+        // Декодер проверяет подпись HS256 тем же секретом, что и auth-service.
         SecretKey key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         return NimbusReactiveJwtDecoder.withSecretKey(key)
                 .macAlgorithm(MacAlgorithm.HS256)
@@ -60,6 +62,7 @@ public class SecurityConfig {
     public Converter<Jwt, ? extends Mono<? extends AbstractAuthenticationToken>> jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            // Конвертируем custom claim role в Spring authority формата ROLE_*.
             String role = jwt.getClaimAsString("role");
             if (role == null || role.isBlank()) {
                 return Collections.emptyList();

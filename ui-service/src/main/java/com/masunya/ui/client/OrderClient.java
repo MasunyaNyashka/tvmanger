@@ -77,6 +77,7 @@ public class OrderClient {
     ) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
+        // Собираем query-параметры только для непустых фильтров.
         StringBuilder url = new StringBuilder(baseUrl + "/orders/admin");
         boolean first = true;
         if (status != null) {
@@ -100,6 +101,7 @@ public class OrderClient {
     }
 
     public ConnectionOrderResponse updateStatus(String token, UUID id, ConnectionOrderStatusUpdateRequest request) {
+        // PATCH используется для смены статуса заявки админом.
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<ConnectionOrderStatusUpdateRequest> entity = new HttpEntity<>(request, headers);
@@ -152,6 +154,7 @@ public class OrderClient {
     public List<ClientTariffResponse> getClientTariffsForAdmin(String token, UUID userId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
+        // При null userId отдаем все тарифы, иначе фильтруем по конкретному клиенту.
         String url = userId == null
                 ? baseUrl + "/client-tariffs/admin"
                 : baseUrl + "/client-tariffs/admin?userId=" + userId;

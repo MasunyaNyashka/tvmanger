@@ -29,6 +29,7 @@ public class ConnectionOrderService {
 
     @Transactional
     public ConnectionOrderResponse create(UUID userId, ConnectionOrderCreateRequest request) {
+        // Создаем новую заявку на подключение в стартовом статусе.
         ConnectionOrder order = new ConnectionOrder();
         order.setId(UUID.randomUUID());
         order.setUserId(userId);
@@ -64,6 +65,7 @@ public class ConnectionOrderService {
             LocalDate dateTo
     ) {
         List<ConnectionOrder> orders;
+        // Если указан диапазон дат — ограничиваем выборку интервалом.
         if (dateFrom != null || dateTo != null) {
             LocalDate from = dateFrom != null ? dateFrom : dateTo;
             LocalDate to = dateTo != null ? dateTo : dateFrom;
@@ -91,9 +93,11 @@ public class ConnectionOrderService {
 
     @Transactional
     public ConnectionOrderResponse updateStatus(UUID adminUserId, UUID orderId, ConnectionOrderStatusUpdateRequest request) {
+        // Обновляем только существующую заявку.
         ConnectionOrder order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException("Order not found", HttpStatus.NOT_FOUND));
         OrderStatus oldStatus = order.getStatus();
+        // Защищаем конечный автомат статусов от невалидных переходов.
         if (!isTransitionAllowed(order.getStatus(), request.getStatus())) {
             throw new BusinessException("Invalid status transition", HttpStatus.CONFLICT);
         }
@@ -102,6 +106,7 @@ public class ConnectionOrderService {
         order.setUpdatedAt(Instant.now());
         ConnectionOrder saved = orderRepository.save(order);
         if (oldStatus != OrderStatus.ACTIVE && saved.getStatus() == OrderStatus.ACTIVE) {
+            // При первом переходе в ACTIVE создаем запись клиентского тарифа.
             clientTariffService.createFromActivatedOrder(saved.getUserId(), saved.getTariffId());
         }
         saveAdminAudit(

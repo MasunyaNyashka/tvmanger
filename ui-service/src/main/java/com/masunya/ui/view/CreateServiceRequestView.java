@@ -59,6 +59,7 @@ public class CreateServiceRequestView extends VerticalLayout implements BeforeEn
         phone.setRequiredIndicatorVisible(true);
         phone.setValueChangeMode(ValueChangeMode.EAGER);
 
+        // Кнопка активируется только когда обязательные поля валидны.
         submit.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         submit.setEnabled(false);
         submit.addClickListener(e -> submitForm());
@@ -74,6 +75,7 @@ public class CreateServiceRequestView extends VerticalLayout implements BeforeEn
     }
 
     private void submitForm() {
+        // Финальная проверка перед отправкой на backend.
         if (!isFormValid(true)) {
             return;
         }
@@ -101,6 +103,7 @@ public class CreateServiceRequestView extends VerticalLayout implements BeforeEn
     }
 
     private void updateSubmitState() {
+        // Держим кнопку отправки синхронной с текущей валидностью формы.
         submit.setEnabled(isFormValid(false));
     }
 
@@ -108,6 +111,7 @@ public class CreateServiceRequestView extends VerticalLayout implements BeforeEn
         boolean typeValid = type.getValue() != null;
         boolean addressValid = hasText(address.getValue());
         String rawPhone = phone.getValue() == null ? "" : phone.getValue().trim();
+        // Валидация номера телефона по шаблону.
         boolean phoneValid = rawPhone.matches(PHONE_REGEX);
 
         if (markInvalid || !address.isEmpty()) {

@@ -70,6 +70,7 @@ public class ConnectionOrderController {
 
     private UUID extractUserId(Jwt jwt) {
         try {
+            // В subject JWT ожидаем UUID пользователя.
             return UUID.fromString(jwt.getSubject());
         } catch (Exception e) {
             throw new BusinessException("Invalid user id in token");

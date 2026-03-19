@@ -62,6 +62,7 @@ public class CreateOrderView extends VerticalLayout implements BeforeEnterObserv
         phone.setRequiredIndicatorVisible(true);
         phone.setValueChangeMode(ValueChangeMode.EAGER);
 
+        // Кнопка активируется только когда вся форма валидна.
         submit.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         submit.setEnabled(false);
         submit.addClickListener(e -> submitForm());
@@ -78,6 +79,7 @@ public class CreateOrderView extends VerticalLayout implements BeforeEnterObserv
     }
 
     private void submitForm() {
+        // Финальная проверка перед отправкой на backend.
         if (!isFormValid(true)) {
             return;
         }
@@ -103,6 +105,7 @@ public class CreateOrderView extends VerticalLayout implements BeforeEnterObserv
     }
 
     private void updateSubmitState() {
+        // Мгновенно синхронизируем состояние кнопки с валидностью формы.
         submit.setEnabled(isFormValid(false));
     }
 
@@ -111,6 +114,7 @@ public class CreateOrderView extends VerticalLayout implements BeforeEnterObserv
         boolean fullNameValid = hasText(fullName.getValue());
         boolean addressValid = hasText(address.getValue());
         String rawPhone = phone.getValue() == null ? "" : phone.getValue().trim();
+        // Валидация номера телефона по шаблону +79991234567.
         boolean phoneValid = rawPhone.matches(PHONE_REGEX);
 
         if (markInvalid || !fullName.isEmpty()) {

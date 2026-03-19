@@ -7,6 +7,7 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 @EnableEurekaServer
 public class DiscoveryServiceApplication {
     public static void main(String[] args) {
+        // Точка входа сервера service discovery (Eureka).
         SpringApplication.run(DiscoveryServiceApplication.class, args);
     }
 }

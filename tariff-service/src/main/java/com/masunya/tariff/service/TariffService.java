@@ -48,9 +48,11 @@ public class TariffService {
 
     @Transactional
     public TariffResponse create(UUID adminUserId, TariffCreateRequest request) {
+        // Имя тарифа должно быть уникальным в рамках всей системы.
         if (tariffRepository.existsByNameIgnoreCase(request.getName())) {
             throw new BusinessException("Tariff name already exists", HttpStatus.CONFLICT);
         }
+        // Создаем тариф из запроса.
         Tariff tariff = new Tariff();
         tariff.setId(UUID.randomUUID());
         tariff.setName(request.getName().trim());
@@ -61,14 +63,17 @@ public class TariffService {
         tariff.setArchived(false);
         tariff.setCreatedAt(Instant.now());
         Tariff saved = tariffRepository.save(tariff);
+        // Логируем действие админа в аудит.
         saveAdminAudit(adminUserId, "TARIFF_CREATED", "TARIFF", saved.getId(), saved.getName());
         return toResponse(saved);
     }
 
     @Transactional
     public TariffResponse update(UUID adminUserId, UUID id, TariffUpdateRequest request) {
+        // Обновляем только существующий тариф.
         Tariff tariff = tariffRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Tariff not found", HttpStatus.NOT_FOUND));
+        // Проверяем уникальность имени относительно других тарифов.
         if (tariffRepository.existsByNameIgnoreCaseAndIdNot(request.getName(), id)) {
             throw new BusinessException("Tariff name already exists", HttpStatus.CONFLICT);
         }
@@ -84,6 +89,7 @@ public class TariffService {
 
     @Transactional
     public TariffResponse setArchived(UUID adminUserId, UUID id, boolean archived) {
+        // Архивация/разархивация меняет только флаг archived.
         Tariff tariff = tariffRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Tariff not found", HttpStatus.NOT_FOUND));
         tariff.setArchived(archived);
@@ -100,6 +106,7 @@ public class TariffService {
 
     @Transactional
     public void delete(UUID adminUserId, UUID id) {
+        // Перед удалением проверяем, что тариф существует.
         Tariff tariff = tariffRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Tariff not found", HttpStatus.NOT_FOUND));
         tariffRepository.delete(tariff);

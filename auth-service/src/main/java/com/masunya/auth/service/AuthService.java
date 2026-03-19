@@ -26,9 +26,11 @@ public class AuthService {
     private final AdminAuditLogRepository adminAuditLogRepository;
 
     public String register(RegisterRequest request) {
+        // Не допускаем регистрацию с уже занятым логином.
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new BusinessException("Username already exists");
         }
+        // Создаем клиента по умолчанию и сохраняем в БД.
         AuthUser user = new AuthUser();
         user.setId(UUID.randomUUID());
         user.setUsername(request.getUsername());
@@ -36,6 +38,7 @@ public class AuthService {
         user.setRole(Role.CLIENT);
         user.setEnabled(true);
         userRepository.save(user);
+        // Сразу возвращаем JWT, чтобы пользователь был авторизован после регистрации.
         return jwtUtil.generateToken(
                 user.getId(),
                 user.getUsername(),
@@ -44,6 +47,7 @@ public class AuthService {
     }
 
     public String login(LoginRequest request) {
+        // Находим пользователя и отдаем единый ответ при невалидных credentials.
         AuthUser user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new BusinessException(
                         "Invalid credentials",
@@ -56,8 +60,10 @@ public class AuthService {
             );
         }
         if (user.getRole() == Role.ADMIN) {
+            // Логируем входы админов в отдельный аудит.
             saveAdminAudit(user.getId(), "ADMIN_LOGIN", "AUTH", user.getId(), user.getUsername());
         }
+        // Генерируем новый JWT на успешный вход.
         return jwtUtil.generateToken(
                 user.getId(),
                 user.getUsername(),

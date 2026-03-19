@@ -94,6 +94,7 @@ public class AdminServiceRequestsView extends VerticalLayout implements BeforeEn
 
         Button save = new Button("Сохранить", e -> {
             try {
+                // Не отправляем запрос, пока админ не выбрал статус.
                 if (status.getValue() == null) {
                     Notification.show("Выберите статус");
                     return;

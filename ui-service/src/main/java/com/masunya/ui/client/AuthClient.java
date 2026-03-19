@@ -26,6 +26,7 @@ public class AuthClient {
     }
 
     public AuthResponse login(LoginRequest request) {
+        // UI вызывает backend-логин и получает JWT.
         HttpEntity<LoginRequest> entity = new HttpEntity<>(request);
         ResponseEntity<AuthResponse> response = restTemplate.exchange(
                 baseUrl + "/auth/login",
@@ -37,6 +38,7 @@ public class AuthClient {
     }
 
     public AuthResponse register(RegisterRequest request) {
+        // UI вызывает backend-регистрацию и получает JWT.
         HttpEntity<RegisterRequest> entity = new HttpEntity<>(request);
         ResponseEntity<AuthResponse> response = restTemplate.exchange(
                 baseUrl + "/auth/register",
@@ -48,6 +50,7 @@ public class AuthClient {
     }
 
     public List<AdminAuditLogResponse> getAdminAuditLogs(String token, int limit) {
+        // Для админ-экрана лога передаем bearer token и лимит выборки.
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         ResponseEntity<List<AdminAuditLogResponse>> response = restTemplate.exchange(

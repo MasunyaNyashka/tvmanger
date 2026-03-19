@@ -13,6 +13,7 @@ import java.time.Instant;
 public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex) {
+        // Возвращаем бизнес-ошибки в предсказуемом формате для UI.
         return ResponseEntity
                 .status(ex.getStatus())
                 .body(
@@ -27,6 +28,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+        // Берем первую валидационную ошибку как основное сообщение для клиента.
         String message = ex.getBindingResult().getFieldErrors().isEmpty()
                 ? "Validation error"
                 : ex.getBindingResult().getFieldErrors().getFirst().getDefaultMessage();
@@ -44,6 +46,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOther(Exception ex) {
+        // Фолбэк на неожиданные ошибки, чтобы не отдавать stacktrace наружу.
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(

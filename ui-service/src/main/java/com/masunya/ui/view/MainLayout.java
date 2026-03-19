@@ -98,6 +98,7 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
     }
 
     private void selectCurrentTab() {
+        // Подсвечиваем пункт меню, соответствующий текущему открытому view.
         Component currentContent = getContent();
         if (currentContent == null) {
             tabs.setSelectedTab(null);

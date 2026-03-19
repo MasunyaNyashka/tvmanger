@@ -25,6 +25,7 @@ public class ClientTariffService {
 
     @Transactional
     public ClientTariffResponse assign(UUID adminUserId, ClientTariffAssignRequest request) {
+        // Ручное назначение тарифа клиенту из админского интерфейса.
         ClientTariff clientTariff = new ClientTariff();
         clientTariff.setId(UUID.randomUUID());
         clientTariff.setUserId(request.getUserId());
@@ -54,6 +55,7 @@ public class ClientTariffService {
 
     @Transactional(readOnly = true)
     public List<ClientTariffResponse> getForAdmin(UUID userId) {
+        // Если userId пустой — отдаем все записи для админского списка.
         List<ClientTariff> items = userId != null
                 ? clientTariffRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
                 : clientTariffRepository.findAllByOrderByCreatedAtDesc();
@@ -62,6 +64,7 @@ public class ClientTariffService {
 
     @Transactional
     public void createFromActivatedOrder(UUID userId, UUID tariffId) {
+        // Автоматически создаем клиентский тариф после активации заявки.
         ClientTariff clientTariff = new ClientTariff();
         clientTariff.setId(UUID.randomUUID());
         clientTariff.setUserId(userId);
@@ -75,6 +78,7 @@ public class ClientTariffService {
 
     @Transactional
     public ClientTariffResponse updateTariff(UUID adminUserId, UUID clientTariffId, ClientTariffUpdateRequest request) {
+        // Разрешаем изменять тариф, персональную цену и условия.
         ClientTariff clientTariff = clientTariffRepository.findById(clientTariffId)
                 .orElseThrow(() -> new BusinessException("Client tariff not found", HttpStatus.NOT_FOUND));
         UUID oldTariffId = clientTariff.getTariffId();

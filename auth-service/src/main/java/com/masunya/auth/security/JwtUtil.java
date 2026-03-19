@@ -21,11 +21,13 @@ public class JwtUtil {
     private SecretKey key;
     @PostConstruct
     public void init() {
+        // Инициализируем ключ подписи один раз при старте приложения.
         this.key = Keys.hmacShaKeyFor(
                 properties.getSecret().getBytes(StandardCharsets.UTF_8)
         );
     }
     public String generateToken(UUID userId, String username, Role role) {
+        // Формируем JWT с основными пользовательскими claims и TTL из конфигурации.
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(userId.toString())

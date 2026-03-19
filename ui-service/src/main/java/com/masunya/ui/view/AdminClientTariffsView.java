@@ -132,6 +132,7 @@ public class AdminClientTariffsView extends VerticalLayout implements BeforeEnte
     }
 
     private UUID parseOptionalUuid(String raw) {
+        // Пустое значение фильтра означает "все пользователи".
         if (raw == null || raw.isBlank()) {
             return null;
         }

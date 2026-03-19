@@ -29,6 +29,7 @@ public class ServiceRequestService {
 
     @Transactional
     public ServiceRequestResponse create(UUID userId, ServiceRequestCreateRequest request) {
+        // Создаем сервисную заявку в стартовом статусе SUBMITTED.
         ServiceRequest sr = new ServiceRequest();
         sr.setId(UUID.randomUUID());
         sr.setUserId(userId);
@@ -66,6 +67,7 @@ public class ServiceRequestService {
             LocalDate dateTo
     ) {
         List<ServiceRequest> requests;
+        // Поддерживаем комбинированную фильтрацию по датам, статусу и типу.
         if (dateFrom != null || dateTo != null) {
             LocalDate from = dateFrom != null ? dateFrom : dateTo;
             LocalDate to = dateTo != null ? dateTo : dateFrom;
@@ -107,9 +109,11 @@ public class ServiceRequestService {
 
     @Transactional
     public ServiceRequestResponse updateStatus(UUID adminUserId, UUID id, ServiceRequestStatusUpdateRequest request) {
+        // Обновляем только существующую заявку.
         ServiceRequest sr = requestRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Service request not found", HttpStatus.NOT_FOUND));
         ServiceRequestStatus oldStatus = sr.getStatus();
+        // Проверяем допустимость перехода по бизнес-правилам.
         if (!isTransitionAllowed(sr.getStatus(), request.getStatus())) {
             throw new BusinessException("Invalid status transition", HttpStatus.CONFLICT);
         }

@@ -98,6 +98,7 @@ public class AdminDashboardView extends VerticalLayout implements BeforeEnterObs
     private void load() {
         try {
             String token = SessionState.getToken().orElseThrow();
+            // Грузим агрегаты по заявкам в выбранном диапазоне дат.
             List<ConnectionOrderResponse> orders = orderClient.getAllForAdmin(
                     token,
                     null,
@@ -116,6 +117,7 @@ public class AdminDashboardView extends VerticalLayout implements BeforeEnterObs
 
             totals.setText("Заявки на подключение: " + orders.size() + ", сервисные заявки: " + serviceRequests.size());
             topTariffsGrid.setItems(buildTopTariffs(orders, tariffNameById));
+            // Строим почасовую статистику для двух типов заявок.
             ordersByHourGrid.setItems(buildHours(orders.stream().map(ConnectionOrderResponse::getCreatedAt).toList()));
             serviceRequestsByHourGrid.setItems(buildHours(
                     serviceRequests.stream().map(ServiceRequestResponse::getCreatedAt).toList()

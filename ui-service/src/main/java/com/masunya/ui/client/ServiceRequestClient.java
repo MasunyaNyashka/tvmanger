@@ -76,6 +76,7 @@ public class ServiceRequestClient {
     ) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
+        // Собираем query-параметры только для заданных фильтров.
         StringBuilder url = new StringBuilder(baseUrl + "/service-requests/admin");
         boolean first = true;
         if (status != null) {
@@ -103,6 +104,7 @@ public class ServiceRequestClient {
     }
 
     public ServiceRequestResponse updateStatus(String token, UUID id, ServiceRequestStatusUpdateRequest request) {
+        // PATCH используется для смены статуса сервисной заявки админом.
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<ServiceRequestStatusUpdateRequest> entity = new HttpEntity<>(request, headers);
