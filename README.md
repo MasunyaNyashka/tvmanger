@@ -95,40 +95,40 @@ mvn -pl ui-service spring-boot:run
 
 ### Главные экраны
 
-1. Авторизация (`docs/images/login.png`)
+1. Авторизация
 
 ![Экран авторизации](docs/images/login.png)
 
-2. Список тарифов клиента (`docs/images/tariffs-list.png`)
+2. Список тарифов клиента
 
 ![Список тарифов](docs/images/tariffs-list.png)
 
-3. Создание заявки на подключение (`docs/images/create-order.png`)
+3. Создание заявки на подключение
 
 ![Создание заявки на подключение](docs/images/create-order.png)
 
-4. Создание сервисной заявки (`docs/images/create-service-request.png`)
+4. Создание сервисной заявки
 
 ![Создание сервисной заявки](docs/images/create-service-request.png)
 
 ### Экраны администратора
 
-1. Админский дашборд (`docs/images/admin-dashboard.png`)
+1. Админский дашборд
 
 ![Админский дашборд](docs/images/admin-dashboard.png)
 
-2. Заявки на подключение (админ) (`docs/images/admin-orders.png`)
+2. Заявки на подключение (админ)
 
 ![Админские заявки на подключение](docs/images/admin-orders.png)
 
-3. Сервисные заявки (админ) (`docs/images/admin-service-requests.png`)
+3. Сервисные заявки (админ)
 
 ![Админские сервисные заявки](docs/images/admin-service-requests.png)
 
-4. Тарифы клиентов (админ) (`docs/images/admin-client-tariffs.png`)
+4. Тарифы клиентов (админ)
 
 ![Тарифы клиентов (админ)](docs/images/admin-client-tariffs.png)
 
-5. Аудит-логи (админ) (`docs/images/admin-audit-logs.png`)
+5. Аудит-логи (админ)
 
 ![Аудит-логи (админ)](docs/images/admin-audit-logs.png)
