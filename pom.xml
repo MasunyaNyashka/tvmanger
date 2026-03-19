@@ -7,7 +7,16 @@
     <groupId>com.masunya</groupId>
     <artifactId>tvmanger</artifactId>
     <version>1.0.0</version>
+    <name>TV Manager</name>
+    <description>Микросервисная платформа для управления тарифами, заявками клиентов и сервисными заявками.</description>
     <packaging>pom</packaging>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
     <modules>
         <module>common-lib</module>
         <module>discovery-service</module>
