@@ -132,3 +132,17 @@ mvn -pl ui-service spring-boot:run
 5. Аудит-логи (админ)
 
 ![Аудит-логи (админ)](docs/images/admin-audit-logs.png)
+
+
+# Видео
+
+## Клиент
+
+
+https://github.com/user-attachments/assets/3b65132e-0ed5-45e2-a5ac-efa5414b6ce8
+
+## Админ
+
+
+https://github.com/user-attachments/assets/e463ccb8-e822-4756-89f9-575721d1eff4
+
