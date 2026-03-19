@@ -7,11 +7,13 @@ import com.masunya.ui.dto.ConnectionOrderCreateRequest;
 import com.masunya.ui.dto.TariffResponse;
 import com.masunya.ui.security.SessionState;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -29,6 +31,10 @@ public class CreateOrderView extends VerticalLayout implements BeforeEnterObserv
     private final TariffClient tariffClient;
     private final OrderClient orderClient;
     private final ComboBox<TariffResponse> tariff = new ComboBox<>("Тариф");
+    private final TextField fullName = new TextField("ФИО");
+    private final TextField address = new TextField("Адрес");
+    private final TextField phone = new TextField("Телефон");
+    private final Button submit = new Button("Отправить");
     private List<TariffResponse> tariffs = List.of();
 
     public CreateOrderView(TariffClient tariffClient, OrderClient orderClient) {
@@ -36,15 +42,16 @@ public class CreateOrderView extends VerticalLayout implements BeforeEnterObserv
         this.orderClient = orderClient;
 
         H2 title = new H2("Заявка на подключение");
+
         tariff.setItemLabelGenerator(TariffResponse::getName);
         tariff.setRequiredIndicatorVisible(true);
 
-        TextField fullName = new TextField("ФИО");
         fullName.setRequiredIndicatorVisible(true);
-        TextField address = new TextField("Адрес");
-        address.setRequiredIndicatorVisible(true);
+        fullName.setValueChangeMode(ValueChangeMode.EAGER);
 
-        TextField phone = new TextField("Телефон");
+        address.setRequiredIndicatorVisible(true);
+        address.setValueChangeMode(ValueChangeMode.EAGER);
+
         phone.setPattern(PHONE_REGEX);
         phone.setAllowedCharPattern("[0-9+]");
         phone.setMinLength(10);
@@ -53,71 +60,76 @@ public class CreateOrderView extends VerticalLayout implements BeforeEnterObserv
         phone.setPlaceholder("+79991234567");
         phone.setHelperText("Формат: +79991234567");
         phone.setRequiredIndicatorVisible(true);
+        phone.setValueChangeMode(ValueChangeMode.EAGER);
 
-        Button submit = new Button("Отправить");
-        submit.addClickListener(e -> {
-            try {
-                if (!validateForm(fullName, address, phone)) {
-                    return;
-                }
+        submit.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        submit.setEnabled(false);
+        submit.addClickListener(e -> submitForm());
 
-                String token = SessionState.getToken().orElseThrow();
-                ConnectionOrderCreateRequest request = new ConnectionOrderCreateRequest();
-                request.setTariffId(tariff.getValue().getId());
-                request.setFullName(fullName.getValue().trim());
-                request.setAddress(address.getValue().trim());
-                request.setPhone(phone.getValue().trim());
-                orderClient.create(token, request);
-
-                Notification.show("Заявка отправлена");
-                fullName.clear();
-                address.clear();
-                phone.clear();
-                tariff.clear();
-            } catch (Exception ex) {
-                Notification.show("Ошибка отправки заявки");
-            }
-        });
+        tariff.addValueChangeListener(e -> updateSubmitState());
+        fullName.addValueChangeListener(e -> updateSubmitState());
+        address.addValueChangeListener(e -> updateSubmitState());
+        phone.addValueChangeListener(e -> updateSubmitState());
 
         add(title, tariff, fullName, address, phone, submit);
         setMaxWidth("500px");
         loadTariffs();
+        updateSubmitState();
     }
 
-    private boolean validateForm(TextField fullName, TextField address, TextField phone) {
-        boolean valid = true;
-
-        if (tariff.getValue() == null) {
-            Notification.show("Выберите тариф");
-            valid = false;
+    private void submitForm() {
+        if (!isFormValid(true)) {
+            return;
         }
 
-        if (fullName.getValue() == null || fullName.getValue().isBlank()) {
-            fullName.setInvalid(true);
-            valid = false;
-        } else {
-            fullName.setInvalid(false);
-        }
+        try {
+            String token = SessionState.getToken().orElseThrow();
+            ConnectionOrderCreateRequest request = new ConnectionOrderCreateRequest();
+            request.setTariffId(tariff.getValue().getId());
+            request.setFullName(fullName.getValue().trim());
+            request.setAddress(address.getValue().trim());
+            request.setPhone(phone.getValue().trim());
+            orderClient.create(token, request);
 
-        if (address.getValue() == null || address.getValue().isBlank()) {
-            address.setInvalid(true);
-            valid = false;
-        } else {
-            address.setInvalid(false);
+            Notification.show("Заявка отправлена");
+            fullName.clear();
+            address.clear();
+            phone.clear();
+            tariff.clear();
+            updateSubmitState();
+        } catch (Exception ex) {
+            Notification.show("Ошибка отправки заявки");
         }
+    }
 
+    private void updateSubmitState() {
+        submit.setEnabled(isFormValid(false));
+    }
+
+    private boolean isFormValid(boolean markInvalid) {
+        boolean tariffValid = tariff.getValue() != null;
+        boolean fullNameValid = hasText(fullName.getValue());
+        boolean addressValid = hasText(address.getValue());
         String rawPhone = phone.getValue() == null ? "" : phone.getValue().trim();
-        if (!rawPhone.matches(PHONE_REGEX)) {
-            phone.setInvalid(true);
-            valid = false;
-        } else {
+        boolean phoneValid = rawPhone.matches(PHONE_REGEX);
+
+        if (markInvalid || !fullName.isEmpty()) {
+            fullName.setInvalid(!fullNameValid);
+        }
+        if (markInvalid || !address.isEmpty()) {
+            address.setInvalid(!addressValid);
+        }
+        if (markInvalid || !rawPhone.isEmpty()) {
+            phone.setInvalid(!phoneValid);
+        } else if (!markInvalid) {
             phone.setInvalid(false);
         }
 
-        if (!valid) {
-            Notification.show("Проверьте заполнение формы");
-        }
-        return valid;
+        return tariffValid && fullNameValid && addressValid && phoneValid;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     private void loadTariffs() {
@@ -148,5 +160,6 @@ public class CreateOrderView extends VerticalLayout implements BeforeEnterObserv
             } catch (Exception ignored) {
             }
         });
+        updateSubmitState();
     }
 }

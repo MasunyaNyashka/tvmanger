@@ -8,11 +8,13 @@ import com.masunya.ui.dto.ServiceRequestCreateRequest;
 import com.masunya.ui.dto.TariffResponse;
 import com.masunya.ui.security.SessionState;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -27,23 +29,26 @@ public class CreateServiceRequestView extends VerticalLayout implements BeforeEn
 
     private final TariffClient tariffClient;
     private final ServiceRequestClient serviceRequestClient;
+    private final ComboBox<ServiceRequestType> type = new ComboBox<>("Тип");
+    private final ComboBox<TariffResponse> tariff = new ComboBox<>("Тариф (для изменения)");
+    private final TextField address = new TextField("Адрес");
+    private final TextField phone = new TextField("Телефон");
+    private final TextField details = new TextField("Описание");
+    private final Button submit = new Button("Отправить");
 
     public CreateServiceRequestView(TariffClient tariffClient, ServiceRequestClient serviceRequestClient) {
         this.tariffClient = tariffClient;
         this.serviceRequestClient = serviceRequestClient;
 
         H2 title = new H2("Заявка на сервис");
-        ComboBox<ServiceRequestType> type = new ComboBox<>("Тип");
         type.setItems(ServiceRequestType.values());
         type.setRequiredIndicatorVisible(true);
 
-        ComboBox<TariffResponse> tariff = new ComboBox<>("Тариф (для изменения)");
         tariff.setItemLabelGenerator(TariffResponse::getName);
 
-        TextField address = new TextField("Адрес");
         address.setRequiredIndicatorVisible(true);
+        address.setValueChangeMode(ValueChangeMode.EAGER);
 
-        TextField phone = new TextField("Телефон");
         phone.setPattern(PHONE_REGEX);
         phone.setAllowedCharPattern("[0-9+]");
         phone.setMinLength(10);
@@ -52,75 +57,76 @@ public class CreateServiceRequestView extends VerticalLayout implements BeforeEn
         phone.setPlaceholder("+79991234567");
         phone.setHelperText("Формат: +79991234567");
         phone.setRequiredIndicatorVisible(true);
+        phone.setValueChangeMode(ValueChangeMode.EAGER);
 
-        TextField details = new TextField("Описание");
+        submit.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        submit.setEnabled(false);
+        submit.addClickListener(e -> submitForm());
 
-        Button submit = new Button("Отправить");
-        submit.addClickListener(e -> {
-            try {
-                if (!validateForm(type, address, phone)) {
-                    return;
-                }
-
-                String token = SessionState.getToken().orElseThrow();
-                ServiceRequestCreateRequest request = new ServiceRequestCreateRequest();
-                request.setType(type.getValue());
-                request.setTariffId(tariff.getValue() != null ? tariff.getValue().getId() : null);
-                request.setAddress(address.getValue().trim());
-                request.setPhone(phone.getValue().trim());
-                request.setDetails(details.getValue());
-                serviceRequestClient.create(token, request);
-
-                Notification.show("Заявка отправлена");
-                type.clear();
-                tariff.clear();
-                address.clear();
-                phone.clear();
-                details.clear();
-            } catch (Exception ex) {
-                Notification.show("Ошибка отправки заявки");
-            }
-        });
+        type.addValueChangeListener(e -> updateSubmitState());
+        address.addValueChangeListener(e -> updateSubmitState());
+        phone.addValueChangeListener(e -> updateSubmitState());
 
         add(title, type, tariff, address, phone, details, submit);
         setMaxWidth("500px");
-        loadTariffs(tariff);
+        loadTariffs();
+        updateSubmitState();
     }
 
-    private boolean validateForm(
-            ComboBox<ServiceRequestType> type,
-            TextField address,
-            TextField phone
-    ) {
-        boolean valid = true;
-
-        if (type.getValue() == null) {
-            Notification.show("Выберите тип заявки");
-            valid = false;
+    private void submitForm() {
+        if (!isFormValid(true)) {
+            return;
         }
 
-        if (address.getValue() == null || address.getValue().isBlank()) {
-            address.setInvalid(true);
-            valid = false;
-        } else {
-            address.setInvalid(false);
-        }
+        try {
+            String token = SessionState.getToken().orElseThrow();
+            ServiceRequestCreateRequest request = new ServiceRequestCreateRequest();
+            request.setType(type.getValue());
+            request.setTariffId(tariff.getValue() != null ? tariff.getValue().getId() : null);
+            request.setAddress(address.getValue().trim());
+            request.setPhone(phone.getValue().trim());
+            request.setDetails(details.getValue());
+            serviceRequestClient.create(token, request);
 
+            Notification.show("Заявка отправлена");
+            type.clear();
+            tariff.clear();
+            address.clear();
+            phone.clear();
+            details.clear();
+            updateSubmitState();
+        } catch (Exception ex) {
+            Notification.show("Ошибка отправки заявки");
+        }
+    }
+
+    private void updateSubmitState() {
+        submit.setEnabled(isFormValid(false));
+    }
+
+    private boolean isFormValid(boolean markInvalid) {
+        boolean typeValid = type.getValue() != null;
+        boolean addressValid = hasText(address.getValue());
         String rawPhone = phone.getValue() == null ? "" : phone.getValue().trim();
-        if (!rawPhone.matches(PHONE_REGEX)) {
-            phone.setInvalid(true);
-            valid = false;
-        } else {
+        boolean phoneValid = rawPhone.matches(PHONE_REGEX);
+
+        if (markInvalid || !address.isEmpty()) {
+            address.setInvalid(!addressValid);
+        }
+        if (markInvalid || !rawPhone.isEmpty()) {
+            phone.setInvalid(!phoneValid);
+        } else if (!markInvalid) {
             phone.setInvalid(false);
         }
 
-        if (!valid) {
-            Notification.show("Проверьте заполнение формы");
-        }
-        return valid;
+        return typeValid && addressValid && phoneValid;
     }
 
-    private void loadTariffs(ComboBox<TariffResponse> tariff) {
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private void loadTariffs() {
         try {
             List<TariffResponse> tariffs = tariffClient.getPublicTariffs();
             tariff.setItems(tariffs);
