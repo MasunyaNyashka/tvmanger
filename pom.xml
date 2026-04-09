@@ -26,6 +26,7 @@
         <module>order-service</module>
         <module>service-request-service</module>
         <module>ui-service</module>
+        <module>functional-tests</module>
     </modules>
 
     <properties>
