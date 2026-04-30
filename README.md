@@ -112,6 +112,7 @@ mvn -pl ui-service spring-boot:run
  - включает кэширование Maven-зависимостей;
  - запускает тесты Maven;
  - исключает модуль functional-tests.
+
 [![Test](https://github.com/MasunyaNyashka/tvmanger/actions/workflows/tests.yml/badge.svg)](https://github.com/MasunyaNyashka/tvmanger/actions)
 
 [![Build](https://github.com/MasunyaNyashka/tvmanger/actions/workflows/build.yml/badge.svg)](https://github.com/MasunyaNyashka/tvmanger/actions)
