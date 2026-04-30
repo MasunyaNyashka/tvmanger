@@ -90,6 +90,31 @@ mvn -pl ui-service spring-boot:run
 - сервисные заявки,
 - аудит админов.
 
+## GitHub Actions
+### Workflow: `Java CI with Maven Build`
+Запускается при:
+- `push` в ветку `master`
+- `pull_request` в ветку `master`
+
+Что делает:
+- загружает исходный код репозитория;
+- устанавливает JDK 21 Temurin;
+- включает кэширование Maven-зависимостей;
+- собирает проект без запуска тестов.
+### `Workflow: Java CI with Maven`
+Запускается при:
+ - `push` в ветку `master`
+ - `pull_request` в ветку `master`
+
+Что делает:
+ - загружает исходный код репозитория;
+ - устанавливает JDK 21 Temurin;
+ - включает кэширование Maven-зависимостей;
+ - запускает тесты Maven;
+ - исключает модуль functional-tests.
+[![Test](https://github.com/MasunyaNyashka/tvmanger/actions/workflows/tests.yml/badge.svg)](https://github.com/MasunyaNyashka/tvmanger/actions)
+
+[![Build](https://github.com/MasunyaNyashka/tvmanger/actions/workflows/build.yml/badge.svg)](https://github.com/MasunyaNyashka/tvmanger/actions)
 ## Скриншоты
 
 
