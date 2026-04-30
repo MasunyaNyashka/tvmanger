@@ -20,5 +20,5 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Test with maven
-      run: mvn test -pl "!<functional-tests>" --batch-mode | grep -v 'Download.* http'
+      run: mvn test -pl "!functional-tests" --batch-mode | grep -v 'Download.* http'
 
